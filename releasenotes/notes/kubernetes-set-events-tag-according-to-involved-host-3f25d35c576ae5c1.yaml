@@ -1,0 +1,3 @@
+---
+features:
+  - Matching host tags for kubernetes events to the related hosts instead of the host collecting the events.
