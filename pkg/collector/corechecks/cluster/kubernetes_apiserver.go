@@ -328,7 +328,7 @@ ITER_EVENTS:
 		}
 	}
 	for _, bundle := range eventsByObject {
-		datadogEv, err := bundle.formatEvents(k.KubeAPIServerHostname, modified)
+		datadogEv, err := bundle.formatEvents(modified)
 		if err != nil {
 			k.Warnf("Error while formatting bundled events, %s. Not submitting", err.Error())
 			continue
