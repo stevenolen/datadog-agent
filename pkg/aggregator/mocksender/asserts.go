@@ -110,18 +110,12 @@ func MatchEventLike(expected metrics.Event, allowedDelta time.Duration) interfac
 // Compare an Event on specifics values:
 // AggregationKey, Priority, SourceTypeName, EventType, Host, and tag list
 func eventLike(expectedEvent, actualEvent metrics.Event) bool {
-	if assert.ObjectsAreEqualValues(expectedEvent.AggregationKey, actualEvent.AggregationKey) &&
+	return (assert.ObjectsAreEqualValues(expectedEvent.AggregationKey, actualEvent.AggregationKey) &&
 		assert.ObjectsAreEqualValues(expectedEvent.Priority, actualEvent.Priority) &&
 		assert.ObjectsAreEqualValues(expectedEvent.SourceTypeName, actualEvent.SourceTypeName) &&
 		assert.ObjectsAreEqualValues(expectedEvent.EventType, actualEvent.EventType) &&
-		expectedInActual(expectedEvent.Tags, actualEvent.Tags) {
-		if expectedEvent.Host != "" {
-			// FIXME We only check the host entry if it has been set
-			return (assert.ObjectsAreEqualValues(expectedEvent.Host, actualEvent.Host))
-		}
-		return true
-	}
-	return false
+		assert.ObjectsAreEqualValues(expectedEvent.Host, actualEvent.Host) &&
+		expectedInActual(expectedEvent.Tags, actualEvent.Tags))
 }
 
 // Return a bool value if all the elements of expected are inside the actual array

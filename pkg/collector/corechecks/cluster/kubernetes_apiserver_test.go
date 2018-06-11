@@ -237,7 +237,7 @@ func TestProcessEvent(t *testing.T) {
 		AggregationKey: "kubernetes_apiserver:e6417a7f-f566-11e7-9749-0e4863e1cbf4",
 		SourceTypeName: "kubernetes",
 		Ts:             709662600,
-		Host:           "hostname",
+		Host:           "",
 		EventType:      "kubernetes_apiserver",
 	}
 	mocked.On("Event", mock.AnythingOfType("metrics.Event"))
