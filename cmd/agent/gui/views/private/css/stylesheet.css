@@ -268,7 +268,8 @@ a {
         padding-left: 15px; }
       #main #general_status .stat .stat_subdata, #main #collector_status .stat .stat_subdata {
         display: block;
-        padding-left: 20px; }
+        padding-left: 20px;
+        padding-bottom: 20px; }
       #main #general_status .stat .error, #main #collector_status .stat .error {
         color: red;
         font-weight: bold; }
