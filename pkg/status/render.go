@@ -57,6 +57,7 @@ func FormatStatus(data []byte) (string, error) {
 	json.Unmarshal(data, &stats)
 	forwarderStats := stats["forwarderStats"]
 	runnerStats := stats["runnerStats"]
+	FormatRunnerStats(runnerStats)
 	pyLoaderStats := stats["pyLoaderStats"]
 	autoConfigStats := stats["autoConfigStats"]
 	checkSchedulerStats := stats["checkSchedulerStats"]
@@ -87,6 +88,7 @@ func FormatDCAStatus(data []byte) (string, error) {
 	json.Unmarshal(data, &stats)
 	forwarderStats := stats["forwarderStats"]
 	runnerStats := stats["runnerStats"]
+	FormatRunnerStats(runnerStats)
 	autoConfigStats := stats["autoConfigStats"]
 	checkSchedulerStats := stats["checkSchedulerStats"]
 	title := fmt.Sprintf("Datadog Cluster Agent (v%s)", stats["version"])
@@ -182,6 +184,7 @@ func renderCheckStats(data []byte, checkName string) (string, error) {
 	stats := make(map[string]interface{})
 	json.Unmarshal(data, &stats)
 	runnerStats := stats["runnerStats"]
+	FormatRunnerStats(runnerStats)
 	pyLoaderStats := stats["pyLoaderStats"]
 	autoConfigStats := stats["autoConfigStats"]
 	checkSchedulerStats := stats["checkSchedulerStats"]
