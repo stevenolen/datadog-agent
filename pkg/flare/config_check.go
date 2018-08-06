@@ -9,10 +9,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"strconv"
 
 	"github.com/DataDog/datadog-agent/cmd/agent/api/response"
 	"github.com/DataDog/datadog-agent/pkg/api/util"
+	"github.com/DataDog/datadog-agent/pkg/collector/check"
 	"github.com/DataDog/datadog-agent/pkg/config"
 	"github.com/fatih/color"
 )
@@ -63,8 +63,14 @@ func GetConfigCheck(w io.Writer, withDebug bool) error {
 		} else {
 			fmt.Fprintln(w, fmt.Sprintf("%s: %s", color.BlueString("Source"), color.RedString("Unknown provider")))
 		}
-		for i, inst := range c.Instances {
-			fmt.Fprintln(w, fmt.Sprintf("%s %s:", color.BlueString("Instance"), color.CyanString(strconv.Itoa(i+1))))
+		for _, inst := range c.Instances {
+			var ID string
+			if len(c.Instances) == 1 {
+				ID = c.Name
+			} else {
+				ID = string(check.BuildID(c.Name, c.InitConfig, inst))
+			}
+			fmt.Fprintln(w, fmt.Sprintf("%s %s:", color.BlueString("Instance"), color.CyanString(ID)))
 			fmt.Fprint(w, fmt.Sprintf("%s", inst))
 			fmt.Fprintln(w, "~")
 		}
