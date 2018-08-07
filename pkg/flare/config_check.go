@@ -70,7 +70,7 @@ func GetConfigCheck(w io.Writer, withDebug bool) error {
 			} else {
 				ID = string(check.BuildID(c.Name, c.InitConfig, inst))
 			}
-			fmt.Fprintln(w, fmt.Sprintf("%s %s:", color.BlueString("Instance"), color.CyanString(ID)))
+			fmt.Fprintln(w, fmt.Sprintf("%s: %s:", color.BlueString("Instance ID"), color.CyanString(ID)))
 			fmt.Fprint(w, fmt.Sprintf("%s", inst))
 			fmt.Fprintln(w, "~")
 		}
