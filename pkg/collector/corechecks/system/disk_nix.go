@@ -150,7 +150,13 @@ func (c *DiskCheck) sendDiskMetrics(sender aggregator.Sender, ioCounter disk.IOC
 	sender.Rate(fmt.Sprintf(diskMetric, "write_time_pct"), float64(ioCounter.WriteTime)*100/1000, "", tags)
 }
 
+// Configure the disk check
 func (c *DiskCheck) Configure(data integration.Data, initConfig integration.Data) error {
 	err := c.commonConfigure(data)
 	return err
+}
+
+// nothing to do for non-windows OS
+func formatRegexp(regexp string) string {
+	return regexp
 }

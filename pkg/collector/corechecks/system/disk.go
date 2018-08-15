@@ -77,7 +77,6 @@ func (c *DiskCheck) excludeDisk(mountpoint, device, fstype string) bool {
 	return false
 }
 
-// Configure the disk check
 func (c *DiskCheck) commonConfigure(data integration.Data) error {
 	conf := make(map[interface{}]interface{})
 	c.cfg = &diskConfig{}
@@ -106,7 +105,7 @@ func (c *DiskCheck) commonConfigure(data integration.Data) error {
 
 	excludedDiskRe, found := conf["excluded_disk_re"]
 	if excludedDiskRe, ok := excludedDiskRe.(string); found && ok {
-		c.cfg.excludedDiskRe, err = regexp.Compile(excludedDiskRe)
+		c.cfg.excludedDiskRe, err = regexp.Compile(formatRegexp(excludedDiskRe))
 		if err != nil {
 			return err
 		}
@@ -119,7 +118,7 @@ func (c *DiskCheck) commonConfigure(data integration.Data) error {
 
 	excludedMountpointRe, found := conf["excluded_mountpoint_re"]
 	if excludedMountpointRe, ok := excludedMountpointRe.(string); found && ok {
-		c.cfg.excludedMountpointRe, err = regexp.Compile(excludedMountpointRe)
+		c.cfg.excludedMountpointRe, err = regexp.Compile(formatRegexp(excludedMountpointRe))
 		if err != nil {
 			return err
 		}
@@ -133,7 +132,7 @@ func (c *DiskCheck) commonConfigure(data integration.Data) error {
 	deviceTagRe, found := conf["device_tag_re"]
 	if deviceTagRe, ok := deviceTagRe.(map[string]string); found && ok {
 		for reString, tags := range deviceTagRe {
-			re, err := regexp.Compile(reString)
+			re, err := regexp.Compile(formatRegexp(reString))
 			if err != nil {
 				return err
 			}
