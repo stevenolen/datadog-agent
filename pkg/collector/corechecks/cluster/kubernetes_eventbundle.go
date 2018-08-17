@@ -16,6 +16,8 @@ import (
 	"github.com/DataDog/datadog-agent/pkg/metrics"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
+
+	"github.com/DataDog/datadog-agent/pkg/util/kubernetes/clustername"
 )
 
 type kubernetesEventBundle struct {
@@ -60,6 +62,10 @@ func (k *kubernetesEventBundle) addEvent(event *v1.Event) error {
 
 	if event.InvolvedObject.Kind == "Node" || event.InvolvedObject.Kind == "Pod" {
 		k.hostname = event.Source.Host
+		clustername = clustername.GetClustername()
+		if clustername != "" {
+			k.hostname = k.hostname + "-" + clustername
+		}
 	}
 
 	return nil
