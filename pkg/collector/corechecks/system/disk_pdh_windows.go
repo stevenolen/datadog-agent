@@ -67,14 +67,8 @@ func (c *DiskCheck) collectMetrics(sender aggregator.Sender) error {
 
 		tags = append(tags, fmt.Sprintf("device:%s", drive))
 
-		// apply device/mountpoint specific tags
-		for re, deviceTags := range c.cfg.deviceTagRe {
-			if re != nil && re.MatchString(drive) {
-				for _, tag := range deviceTags {
-					tags = append(tags, tag)
-				}
-			}
-		}
+		tags = c.applyDeviceTags(drive, "", tags)
+
 		c.sendMetrics(sender, metrics, tags)
 	}
 
