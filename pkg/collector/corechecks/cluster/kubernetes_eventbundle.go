@@ -62,9 +62,9 @@ func (k *kubernetesEventBundle) addEvent(event *v1.Event) error {
 
 	if event.InvolvedObject.Kind == "Node" || event.InvolvedObject.Kind == "Pod" {
 		k.hostname = event.Source.Host
-		clustername = clustername.GetClustername()
-		if clustername != "" {
-			k.hostname = k.hostname + "-" + clustername
+		clusterName := clustername.GetClusterName()
+		if clusterName != "" {
+			k.hostname = k.hostname + "-" + clusterName
 		}
 	}
 
