@@ -18,9 +18,9 @@ Collector
     {{.CheckName}}{{ if .CheckVersion }} ({{.CheckVersion}}){{ end }}
     {{printDashes .CheckName "-"}}{{- if .CheckVersion }}{{printDashes .CheckVersion "-"}}---{{ end }}
       Total Runs: {{.TotalRuns}}
-      Metric Samples: {{.MetricSamples}}, Total: {{humanize .TotalMetricSamples}}
-      Events: {{.Events}}, Total: {{humanize .TotalEvents}}
-      Service Checks: {{.ServiceChecks}}, Total: {{humanize .TotalServiceChecks}}
+      Metric Samples: Last Run: {{.MetricSamples}}, Total: {{humanize .TotalMetricSamples}}
+      Events: Last Run: {{.Events}}, Total: {{humanize .TotalEvents}}
+      Service Checks: Last Run: {{.ServiceChecks}}, Total: {{humanize .TotalServiceChecks}}
       Average Execution Time : {{.AverageExecutionTime}}ms
       {{if .LastError -}}
       Error: {{lastErrorMessage .LastError}}
