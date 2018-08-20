@@ -160,17 +160,23 @@
   </div>
 
   <div class="stat">
-    <span class="stat_title">DogStatsD</span>
+    <span class="stat_title">Aggregator</span>
     <span class="stat_data">
       {{- with .aggregatorStats -}}
         {{- if .ChecksMetricSample}}
           Checks Metric Sample: {{.ChecksMetricSample}}<br>
         {{- end -}}
+        {{- if .DogstatsdMetricSample}}
+          Dogstatsd Metric Sample: {{.DogstatsdMetricSample}}<br>
+        {{- end}}
         {{- if .Event}}
           Event: {{.Event}}<br>
         {{- end -}}
         {{- if .EventsFlushed}}
           Events Flushed: {{.EventsFlushed}}<br>
+        {{- end -}}
+        {{- if .EventsFlushErrors}}
+          Events Flush Errors: {{.EventsFlushErrors}}<br>
         {{- end -}}
         {{- if .NumberOfFlush}}
           Number Of Flushes: {{.NumberOfFlush}}<br>
@@ -178,22 +184,28 @@
         {{- if .SeriesFlushed}}
           Series Flushed: {{.SeriesFlushed}}<br>
         {{- end -}}
+        {{- if .SeriesFlushErrors}}
+          Series Flush Errors: {{.SeriesFlushErrors}}<br>
+        {{- end -}}
         {{- if .ServiceCheck}}
           Service Check: {{.ServiceCheck}}<br>
         {{- end -}}
         {{- if .ServiceCheckFlushed}}
           Service Checks Flushed: {{.ServiceCheckFlushed}}<br>
         {{- end -}}
+        {{- if .ServiceCheckFlushErrors}}
+          Service Checks Flush Errors: {{.ServiceCheckFlushErrors}}<br>
+        {{- end -}}
         {{- if .SketchesFlushed}}
           Sketches Flushed: {{.SketchesFlushed}}<br>
         {{- end -}}
+        {{- if .SketchesFlushErrors}}
+          Sketches Flush Errors: {{.SketchesFlushErrors}}<br>
+        {{- end -}}
         {{- if .HostnameUpdate}}
           Hostname Update: {{.HostnameUpdate}}<br>
+        {{- end }}
         {{- end -}}
-        {{- if .DogstatsdMetricSample}}
-          Dogstatsd Metric Sample: {{.DogstatsdMetricSample}}<br>
-        {{- end}}
-      {{- end -}}
     </span>
   </div>
 {{- end -}}

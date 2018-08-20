@@ -2,16 +2,22 @@
 NOTE: Changes made to this template should be reflected on the following templates, if applicable:
 * cmd/agent/gui/views/templates/generalStatus.tmpl
 */}}=========
-DogStatsD
+Aggregator
 =========
 {{ if .ChecksMetricSample }}
   Checks Metric Sample: {{.ChecksMetricSample}}
 {{- end -}}
+{{- if .DogstatsdMetricSample}}
+  Dogstatsd Metric Sample: {{.DogstatsdMetricSample}}
+{{- end}}
 {{- if .Event}}
   Event: {{.Event}}
 {{- end -}}
 {{- if .EventsFlushed}}
   Events Flushed: {{.EventsFlushed}}
+{{- end -}}
+{{- if .EventsFlushErrors}}
+  Events Flush Errors: {{.EventsFlushErrors}}
 {{- end -}}
 {{- if .NumberOfFlush}}
   Number Of Flushes: {{.NumberOfFlush}}
@@ -19,18 +25,24 @@ DogStatsD
 {{- if .SeriesFlushed}}
   Series Flushed: {{.SeriesFlushed}}
 {{- end -}}
+{{- if .SeriesFlushErrors}}
+  Series Flush Errors: {{.SeriesFlushErrors}}
+{{- end -}}
 {{- if .ServiceCheck}}
   Service Check: {{.ServiceCheck}}
 {{- end -}}
 {{- if .ServiceCheckFlushed}}
   Service Checks Flushed: {{.ServiceCheckFlushed}}
 {{- end -}}
+{{- if .ServiceCheckFlushErrors}}
+  Service Checks Flush Errors: {{.ServiceCheckFlushErrors}}
+{{- end -}}
 {{- if .SketchesFlushed}}
   Sketches Flushed: {{.SketchesFlushed}}
+{{- end -}}
+{{- if .SketchesFlushErrors}}
+  Sketches Flush Errors: {{.SketchesFlushErrors}}
 {{- end -}}
 {{- if .HostnameUpdate}}
   Hostname Update: {{.HostnameUpdate}}
 {{- end -}}
-{{- if .DogstatsdMetricSample}}
-  Dogstatsd Metric Sample: {{.DogstatsdMetricSample}}
-{{- end}}
