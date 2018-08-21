@@ -8,9 +8,14 @@
 package secrets
 
 import (
+	"bytes"
+	"context"
 	"fmt"
+	"os/exec"
 	"os/user"
+	"strings"
 	"syscall"
+	"time"
 )
 
 func checkRights(path string) error {
@@ -43,4 +48,39 @@ func checkRights(path string) error {
 	}
 
 	return nil
+}
+
+func execCommand(inputPayload string) ([]byte, error) {
+	ctx, cancel := context.WithTimeout(context.Background(),
+		time.Duration(secretBackendTimeout)*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, secretBackendCommand, secretBackendArguments...)
+	if err := checkRights(cmd.Path); err != nil {
+		return nil, err
+	}
+
+	cmd.Stdin = strings.NewReader(inputPayload)
+	// setting an empty env in case some secrets were set using the ENV (ex: API_KEY)
+	cmd.Env = []string{}
+
+	stdout := limitBuffer{
+		buf: &bytes.Buffer{},
+		max: secretBackendOutputMaxSize,
+	}
+	stderr := limitBuffer{
+		buf: &bytes.Buffer{},
+		max: secretBackendOutputMaxSize,
+	}
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	if err != nil {
+		if ctx.Err() == context.DeadlineExceeded {
+			return nil, fmt.Errorf("error while running '%s': command timeout", secretBackendCommand)
+		}
+		return nil, fmt.Errorf("error while running '%s': %s", secretBackendCommand, err)
+	}
+	return stdout.buf.Bytes(), nil
 }
