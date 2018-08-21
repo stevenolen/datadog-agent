@@ -213,11 +213,11 @@ func execCommand(inputPayload string) ([]byte, error) {
 	defer cancel()
 
 	stdin := strings.NewReader(inputPayload)
-	stdout := limitBuffer{
+	stdout := &limitBuffer{
 		buf: &bytes.Buffer{},
 		max: secretBackendOutputMaxSize,
 	}
-	stderr := limitBuffer{
+	stderr := &limitBuffer{
 		buf: &bytes.Buffer{},
 		max: secretBackendOutputMaxSize,
 	}
