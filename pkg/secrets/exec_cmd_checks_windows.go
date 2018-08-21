@@ -213,8 +213,14 @@ func execCommand(inputPayload string) ([]byte, error) {
 	defer cancel()
 
 	stdin := strings.NewReader(inputPayload)
-	stdout := &bytes.Buffer{}
-	stderr := &bytes.Buffer{}
+	stdout := limitBuffer{
+		buf: &bytes.Buffer{},
+		max: secretBackendOutputMaxSize,
+	}
+	stderr := limitBuffer{
+		buf: &bytes.Buffer{},
+		max: secretBackendOutputMaxSize,
+	}
 	goroutine := []func() error{}
 	closeAfterStart := []*os.File{}
 	closeAfterWait := []*os.File{}
@@ -286,5 +292,5 @@ func execCommand(inputPayload string) ([]byte, error) {
 	} else if !state.Success() {
 		return nil, fmt.Errorf("'%s' exited with failure status", secretBackendCommand)
 	}
-	return stdout.Bytes(), nil
+	return stdout.buf.Bytes(), nil
 }

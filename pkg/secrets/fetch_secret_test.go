@@ -9,11 +9,32 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"os/exec"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestMain(m *testing.M) {
+	exec.Command("go", "build", "-o", "test/argument", "test/argument.go").Run()
+	exec.Command("go", "build", "-o", "test/error", "test/error.go").Run()
+	exec.Command("go", "build", "-o", "test/input", "test/input.go").Run()
+	exec.Command("go", "build", "-o", "test/response_too_long", "test/response_too_long.go").Run()
+	exec.Command("go", "build", "-o", "test/simple", "test/simple.go").Run()
+	exec.Command("go", "build", "-o", "test/timeout", "test/timeout.go").Run()
+
+	res := m.Run()
+
+	os.Remove("test/argument")
+	os.Remove("test/error")
+	os.Remove("test/input")
+	os.Remove("test/response_too_long")
+	os.Remove("test/simple")
+	os.Remove("test/timeout")
+
+	os.Exit(res)
+}
 
 func TestLimitBuffer(t *testing.T) {
 	lb := limitBuffer{
@@ -52,51 +73,51 @@ func TestExecCommandError(t *testing.T) {
 	require.NotNil(t, err)
 
 	// test timeout
-	os.Chmod("./test/timeout.sh", 0700)
-	secretBackendCommand = "./test/timeout.sh"
+	os.Chmod("./test/timeout", 0700)
+	secretBackendCommand = "./test/timeout"
 	secretBackendTimeout = 2
 	_, err = execCommand(inputPayload)
 	require.NotNil(t, err)
-	require.Equal(t, "error while running './test/timeout.sh': command timeout", err.Error())
+	require.Equal(t, "error while running './test/timeout': command timeout", err.Error())
 
 	// test simple (no error)
-	os.Chmod("./test/simple.sh", 0700)
-	secretBackendCommand = "./test/simple.sh"
+	os.Chmod("./test/simple", 0700)
+	secretBackendCommand = "./test/simple"
 	resp, err := execCommand(inputPayload)
 	require.Nil(t, err)
 	require.Equal(t, []byte("{\"handle1\":{\"value\":\"simple_password\"}}"), resp)
 
 	// test error
-	secretBackendCommand = "./test/error.sh"
+	secretBackendCommand = "./test/error"
 	_, err = execCommand(inputPayload)
 	require.NotNil(t, err)
 
 	// test arguments
-	os.Chmod("./test/argument.sh", 0700)
-	secretBackendCommand = "./test/argument.sh"
+	os.Chmod("./test/argument", 0700)
+	secretBackendCommand = "./test/argument"
 	secretBackendArguments = []string{"arg1"}
 	_, err = execCommand(inputPayload)
 	require.NotNil(t, err)
-	secretBackendCommand = "./test/argument.sh"
+	secretBackendCommand = "./test/argument"
 	secretBackendArguments = []string{"arg1", "arg2"}
 	resp, err = execCommand(inputPayload)
 	require.Nil(t, err)
 	require.Equal(t, []byte("{\"handle1\":{\"value\":\"arg_password\"}}"), resp)
 
 	// test input
-	os.Chmod("./test/input.sh", 0700)
-	secretBackendCommand = "./test/input.sh"
+	os.Chmod("./test/input", 0700)
+	secretBackendCommand = "./test/input"
 	resp, err = execCommand(inputPayload)
 	require.Nil(t, err)
 	require.Equal(t, []byte("{\"handle1\":{\"value\":\"input_password\"}}"), resp)
 
 	// test buffer limit
-	os.Chmod("./test/response_too_long.sh", 0700)
-	secretBackendCommand = "./test/response_too_long.sh"
+	os.Chmod("./test/response_too_long", 0700)
+	secretBackendCommand = "./test/response_too_long"
 	secretBackendOutputMaxSize = 20
 	_, err = execCommand(inputPayload)
 	require.NotNil(t, err)
-	assert.Equal(t, "error while running './test/response_too_long.sh': command output was too long: exceeded 20 bytes", err.Error())
+	assert.Equal(t, "error while running './test/response_too_long': command output was too long: exceeded 20 bytes", err.Error())
 }
 
 func TestFetchSecretExecError(t *testing.T) {
