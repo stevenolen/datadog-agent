@@ -612,12 +612,6 @@
   version = "v2.1.0"
 
 [[projects]]
-  name = "github.com/paulbellamy/ratecounter"
-  packages = ["."]
-  revision = "524851a93235ac051e3540563ed7909357fe24ab"
-  version = "v0.2.0"
-
-[[projects]]
   name = "github.com/pborman/uuid"
   packages = ["."]
   revision = "e790cca94e6cc75c7064b1332e63811d4aae1a53"
@@ -1316,6 +1310,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5a9127e88f491e8b090e9053c32bd9093cceaf268c57fc6774e5958816dc5311"
+  inputs-digest = "9ebd14b34dcf4d52df3540267aa8d13738acb01162c9b3274a9738d85df01932"
   solver-name = "gps-cdcl"
   solver-version = 1
