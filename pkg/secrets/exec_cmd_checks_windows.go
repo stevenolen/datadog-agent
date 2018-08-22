@@ -140,7 +140,7 @@ func startProcessAsDatadogSecretUser(argv0 string, argv []string, attr *os.ProcA
 				syscall.DUPLICATE_SAME_ACCESS,
 			)
 			if err != nil {
-				return nil, fmt.Errorf("can't call duplicateHandle to execute secretBackendCommand: %s\n", err)
+				return nil, fmt.Errorf("can't call DuplicateHandle to execute secretBackendCommand: %s", err)
 			}
 			defer syscall.CloseHandle(syscall.Handle(fd[i]))
 		}
