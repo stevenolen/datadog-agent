@@ -31,7 +31,7 @@ install:
 
   # Set dummy user to test the secrets feature on windows
   - ps: Get-LocalUser
-  - ps: New-LocalUser -Name "datadog_secretuser" -Description "Test user for the secrets feature on windows." -Password "secret_password"
+  - ps: $Password = ConvertTo-SecureString "secret_password" -AsPlainText -Force; New-LocalUser -Name "datadog_secretuser" -Description "Test user for the secrets feature on windows." -Password $Password
   - ps: New-Item -Path "HKLM:\SOFTWARE\Datadog\Datadog Agent\secrets" -ItemType Directory -Force
   - ps: Set-ItemProperty -Path "HKLM:\SOFTWARE\Datadog\Datadog Agent\secrets" -Name datadog_secretuser -Value "secret_password"
 
