@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -23,6 +24,13 @@ func TestMain(m *testing.M) {
 	exec.Command("go", "build", "-o", "test/response_too_long", "test/response_too_long.go").Run()
 	exec.Command("go", "build", "-o", "test/simple", "test/simple.go").Run()
 	exec.Command("go", "build", "-o", "test/timeout", "test/timeout.go").Run()
+
+	if runtime.GOOS == "windows" {
+		// for tests: We can't change user in appveyor. So unit tests only tests the
+		// execCommand func with the current user. We test
+		// startProcessAsDatadogSecretUser with gitlab in our end-to-end tests.
+		startProcess = os.StartProcess
+	}
 
 	res := m.Run()
 

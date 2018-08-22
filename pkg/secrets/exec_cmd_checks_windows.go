@@ -31,6 +31,7 @@ const (
 	// The user created at install time with low/no rights
 	username             = "datadog_secretuser"
 	passwordRegistryPath = "SOFTWARE\\Datadog\\Datadog Agent\\secrets"
+	localDB              = "." // local account database
 )
 
 func checkRights(path string) error {
@@ -105,26 +106,19 @@ func setOutputPipe(w io.Writer, goroutine *[]func() error, closeAfterStart, clos
 	return nil
 }
 
-// makeCmdLine builds a command line out of args by escaping "special"
-// characters and joining the arguments with spaces.
-func makeCmdLine(cmd string, args []string) string {
-	for _, v := range args {
-		cmd += " " + syscall.EscapeArg(v)
-	}
-	return cmd
-}
-
-func startProcess(argv0 string, argv []string, attr *syscall.ProcAttr) (*os.Process, error) {
+func startProcessAsDatadogSecretUser(argv0 string, argv []string, attr *os.ProcAttr) (*os.Process, error) {
 	argv0p, err := syscall.UTF16PtrFromString(argv0)
 	if err != nil {
 		return nil, fmt.Errorf("can't convert command string to UTF16: %s", err)
 	}
 
-	cmdline := makeCmdLine(argv0, argv)
-
-	argvp, err := syscall.UTF16PtrFromString(cmdline)
+	cmdLine := ""
+	for _, v := range argv {
+		cmdLine += " " + syscall.EscapeArg(v)
+	}
+	argvp, err := syscall.UTF16PtrFromString(cmdLine)
 	if err != nil {
-		return nil, fmt.Errorf("can't convert cmdline string to UTF16: %s", err)
+		return nil, fmt.Errorf("can't convert cmdLine string to UTF16: %s", err)
 	}
 
 	// Acquire the fork lock so that no other threads
@@ -136,9 +130,9 @@ func startProcess(argv0 string, argv []string, attr *syscall.ProcAttr) (*os.Proc
 	p, _ := syscall.GetCurrentProcess()
 	fd := make([]syscall.Handle, len(attr.Files))
 	for i := range attr.Files {
-		if attr.Files[i] > 0 {
+		if attr.Files[i].Fd() > 0 {
 			err := syscall.DuplicateHandle(p,
-				syscall.Handle(attr.Files[i]),
+				syscall.Handle(attr.Files[i].Fd()),
 				p,
 				&fd[i],
 				0,
@@ -166,19 +160,18 @@ func startProcess(argv0 string, argv []string, attr *syscall.ProcAttr) (*os.Proc
 		return nil, err
 	}
 
-	pUsername, _ := syscall.UTF16PtrFromString("datadog_secretuser")
-	pPassword, _ := syscall.UTF16PtrFromString(password)
-	pLocalDB, _ := syscall.UTF16PtrFromString(".")
-	flags := syscall.CREATE_UNICODE_ENVIRONMENT
+	usernamep, _ := syscall.UTF16PtrFromString(username)
+	passwordp, _ := syscall.UTF16PtrFromString(password)
+	localDBp, _ := syscall.UTF16PtrFromString(localDB)
 
 	res, _, err := procCreateProcessWithLogonW.Call(
-		uintptr(unsafe.Pointer(pUsername)),
-		uintptr(unsafe.Pointer(pLocalDB)), // local account database
-		uintptr(unsafe.Pointer(pPassword)),
+		uintptr(unsafe.Pointer(usernamep)),
+		uintptr(unsafe.Pointer(localDBp)),
+		uintptr(unsafe.Pointer(passwordp)),
 		0, // logon flags
 		uintptr(unsafe.Pointer(argv0p)),
 		uintptr(unsafe.Pointer(argvp)),
-		uintptr(flags),
+		uintptr(unsafe.Pointer(nil)),
 		uintptr(unsafe.Pointer(nil)), // let windows load datadog_secretuser env from it's profile
 		uintptr(unsafe.Pointer(nil)), // current dir: same as the one from the datadog_agent
 		uintptr(unsafe.Pointer(si)),
@@ -186,7 +179,7 @@ func startProcess(argv0 string, argv []string, attr *syscall.ProcAttr) (*os.Proc
 	)
 
 	if res == 0 {
-		return nil, fmt.Errorf("error from CreateProcessWithLogonW: %s\n", err)
+		return nil, fmt.Errorf("error from CreateProcessWithLogonW: %s", err)
 	}
 
 	// the 'handle' attribute from os.Process is private so even if we have
@@ -195,7 +188,7 @@ func startProcess(argv0 string, argv []string, attr *syscall.ProcAttr) (*os.Proc
 	// from the os package).
 	proc, err := os.FindProcess(int(pi.ProcessId))
 	if err != nil {
-		return nil, fmt.Errorf("error finding backend process: %s\n", err)
+		return nil, fmt.Errorf("error finding backend process: %s", err)
 	}
 
 	return proc, nil
@@ -206,6 +199,11 @@ func closeFileList(fileList []*os.File) {
 		f.Close()
 	}
 }
+
+// for tests: We can't change user in appveyor. So unit tests only tests the
+// execCommand func with the current user. We test
+// startProcessAsDatadogSecretUser with gitlab in our end-to-end tests.
+var startProcess = startProcessAsDatadogSecretUser
 
 func execCommand(inputPayload string) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(context.Background(),
@@ -236,17 +234,12 @@ func execCommand(inputPayload string) ([]byte, error) {
 		return nil, err
 	}
 
-	fds := []uintptr{}
-	for _, fd := range closeAfterStart {
-		fds = append(fds, fd.Fd())
-	}
-
 	cmd := []string{secretBackendCommand}
 	cmd = append(cmd, secretBackendArguments...)
 	process, err := startProcess(
 		secretBackendCommand,
-		secretBackendArguments,
-		&syscall.ProcAttr{Files: fds},
+		cmd,
+		&os.ProcAttr{Files: closeAfterStart},
 	)
 	if err != nil {
 		closeFileList(closeAfterStart)
@@ -277,20 +270,22 @@ func execCommand(inputPayload string) ([]byte, error) {
 
 	var copyError error
 	for range goroutine {
-		if err := <-errch; err != nil && copyError == nil {
-			copyError = err
+		if errIO := <-errch; errIO != nil && copyError == nil {
+			copyError = errIO
 		}
 	}
 
 	closeFileList(closeAfterWait)
 
 	if err != nil {
+		return nil, fmt.Errorf("error while running '%s': %s", secretBackendCommand, err)
+	} else if !state.Success() {
 		if ctx.Err() == context.DeadlineExceeded {
 			return nil, fmt.Errorf("error while running '%s': command timeout", secretBackendCommand)
 		}
-		return nil, fmt.Errorf("error while running '%s': %s", secretBackendCommand, err)
-	} else if !state.Success() {
 		return nil, fmt.Errorf("'%s' exited with failure status", secretBackendCommand)
+	} else if copyError != nil {
+		return nil, fmt.Errorf("error while running '%s': %s", secretBackendCommand, copyError)
 	}
 	return stdout.buf.Bytes(), nil
 }
