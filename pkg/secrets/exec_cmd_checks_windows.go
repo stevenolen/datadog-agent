@@ -200,11 +200,6 @@ func closeFileList(fileList []*os.File) {
 	}
 }
 
-// for tests: We can't change user in appveyor. So unit tests only tests the
-// execCommand func with the current user. We test
-// startProcessAsDatadogSecretUser with gitlab in our end-to-end tests.
-var startProcess = startProcessAsDatadogSecretUser
-
 func execCommand(inputPayload string) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(context.Background(),
 		time.Duration(secretBackendTimeout)*time.Second)
@@ -236,7 +231,7 @@ func execCommand(inputPayload string) ([]byte, error) {
 
 	cmd := []string{secretBackendCommand}
 	cmd = append(cmd, secretBackendArguments...)
-	process, err := startProcess(
+	process, err := startProcessAsDatadogSecretUser(
 		secretBackendCommand,
 		cmd,
 		&os.ProcAttr{Files: closeAfterStart},

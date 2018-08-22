@@ -10,27 +10,25 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestMain(m *testing.M) {
-	exec.Command("go", "build", "-o", "test/argument", "test/argument.go").Run()
-	exec.Command("go", "build", "-o", "test/error", "test/error.go").Run()
-	exec.Command("go", "build", "-o", "test/input", "test/input.go").Run()
-	exec.Command("go", "build", "-o", "test/response_too_long", "test/response_too_long.go").Run()
-	exec.Command("go", "build", "-o", "test/simple", "test/simple.go").Run()
-	exec.Command("go", "build", "-o", "test/timeout", "test/timeout.go").Run()
+func build(cmd string, args ...string) {
+	out, err := exec.Command(cmd, args...).Output()
+	fmt.Printf("%s -> %v\n", out, err)
+}
 
-	if runtime.GOOS == "windows" {
-		// for tests: We can't change user in appveyor. So unit tests only tests the
-		// execCommand func with the current user. We test
-		// startProcessAsDatadogSecretUser with gitlab in our end-to-end tests.
-		startProcess = os.StartProcess
-	}
+func TestMain(m *testing.M) {
+	build("bash", "-c", "pwd")
+	build("go", "build", "-o", "./test/argument/argument", "./test/argument")
+	build("go", "build", "-o", "./test/error/error", "./test/error")
+	build("go", "build", "-o", "./test/input/input", "./test/input")
+	build("go", "build", "-o", "./test/response_too_long/response_too_long", "./test/response_too_long")
+	build("go", "build", "-o", "./test/simple/simple", "./test/simple")
+	build("go", "build", "-o", "./test/timeout/timeout", "./test/timeout")
 
 	res := m.Run()
 
@@ -81,51 +79,50 @@ func TestExecCommandError(t *testing.T) {
 	require.NotNil(t, err)
 
 	// test timeout
-	os.Chmod("./test/timeout", 0700)
-	secretBackendCommand = "./test/timeout"
+	os.Chmod("./test/timeout/timeout", 0700)
+	secretBackendCommand = "./test/timeout/timeout"
 	secretBackendTimeout = 2
 	_, err = execCommand(inputPayload)
 	require.NotNil(t, err)
-	require.Equal(t, "error while running './test/timeout': command timeout", err.Error())
+	require.Equal(t, "error while running './test/timeout/timeout': command timeout", err.Error())
 
 	// test simple (no error)
-	os.Chmod("./test/simple", 0700)
-	secretBackendCommand = "./test/simple"
+	os.Chmod("./test/simple/simple", 0700)
+	secretBackendCommand = "./test/simple/simple"
 	resp, err := execCommand(inputPayload)
 	require.Nil(t, err)
 	require.Equal(t, []byte("{\"handle1\":{\"value\":\"simple_password\"}}"), resp)
 
 	// test error
-	secretBackendCommand = "./test/error"
+	secretBackendCommand = "./test/error/error"
 	_, err = execCommand(inputPayload)
 	require.NotNil(t, err)
 
 	// test arguments
-	os.Chmod("./test/argument", 0700)
-	secretBackendCommand = "./test/argument"
+	os.Chmod("./test/argument/argument", 0700)
+	secretBackendCommand = "./test/argument/argument"
 	secretBackendArguments = []string{"arg1"}
 	_, err = execCommand(inputPayload)
 	require.NotNil(t, err)
-	secretBackendCommand = "./test/argument"
 	secretBackendArguments = []string{"arg1", "arg2"}
 	resp, err = execCommand(inputPayload)
 	require.Nil(t, err)
 	require.Equal(t, []byte("{\"handle1\":{\"value\":\"arg_password\"}}"), resp)
 
 	// test input
-	os.Chmod("./test/input", 0700)
-	secretBackendCommand = "./test/input"
+	os.Chmod("./test/input/input", 0700)
+	secretBackendCommand = "./test/input/input"
 	resp, err = execCommand(inputPayload)
 	require.Nil(t, err)
 	require.Equal(t, []byte("{\"handle1\":{\"value\":\"input_password\"}}"), resp)
 
 	// test buffer limit
-	os.Chmod("./test/response_too_long", 0700)
-	secretBackendCommand = "./test/response_too_long"
+	os.Chmod("./test/response_too_long/response_too_long", 0700)
+	secretBackendCommand = "./test/response_too_long/response_too_long"
 	secretBackendOutputMaxSize = 20
 	_, err = execCommand(inputPayload)
 	require.NotNil(t, err)
-	assert.Equal(t, "error while running './test/response_too_long': command output was too long: exceeded 20 bytes", err.Error())
+	assert.Equal(t, "error while running './test/response_too_long/response_too_long': command output was too long: exceeded 20 bytes", err.Error())
 }
 
 func TestFetchSecretExecError(t *testing.T) {
