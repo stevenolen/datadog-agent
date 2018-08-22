@@ -62,11 +62,11 @@ func skipStdinCopyError(err error) bool {
 	// Ignore ERROR_BROKEN_PIPE and ERROR_NO_DATA errors copying
 	// to stdin if the program completed successfully otherwise.
 	// See Issue 20445.
-	const _ERROR_NO_DATA = syscall.Errno(0xe8)
+	const errorNoData = syscall.Errno(0xe8)
 	pe, ok := err.(*os.PathError)
 	return ok &&
 		pe.Op == "write" && pe.Path == "|1" &&
-		(pe.Err == syscall.ERROR_BROKEN_PIPE || pe.Err == _ERROR_NO_DATA)
+		(pe.Err == syscall.ERROR_BROKEN_PIPE || pe.Err == errorNoData)
 }
 
 func setInputPipe(r io.Reader, goroutine *[]func() error, closeAfterStart, closeAfterWait *[]*os.File) error {
@@ -140,7 +140,7 @@ func startProcessAsDatadogSecretUser(argv0 string, argv []string, attr *os.ProcA
 				syscall.DUPLICATE_SAME_ACCESS,
 			)
 			if err != nil {
-				return nil, fmt.Errorf("can't call DuplicateHandle to execute secretBackendCommand: %s\n", err)
+				return nil, fmt.Errorf("can't call duplicateHandle to execute secretBackendCommand: %s\n", err)
 			}
 			defer syscall.CloseHandle(syscall.Handle(fd[i]))
 		}
