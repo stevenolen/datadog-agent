@@ -30,7 +30,6 @@ install:
   - pip install -r %GOPATH%\src\github.com\DataDog\datadog-agent\requirements.txt
 
   # Set dummy user to test the secrets feature on windows
-  - ps: Get-LocalUser
   - ps: $Password = ConvertTo-SecureString "dummyPW_:-gch6Rejae9" -AsPlainText -Force; New-LocalUser -Name "datadog_secretuser" -Description "Test user for the secrets feature on windows." -Password $Password
   - ps: New-Item -Path "HKLM:\SOFTWARE\Datadog\Datadog Agent\secrets" -ItemType Directory -Force
   - ps: Set-ItemProperty -Path "HKLM:\SOFTWARE\Datadog\Datadog Agent\secrets" -Name datadog_secretuser -Value "dummyPW_:-gch6Rejae9"
@@ -44,4 +43,4 @@ build: off
 test_script:
   - cd %APPVEYOR_BUILD_FOLDER%
   - inv -e deps
-  - inv -e test --race --profile --fail-on-fmt
+  - inv -e test --race --profile --fail-on-fmt --build-include="secrets"
