@@ -34,12 +34,12 @@ func TestMain(m *testing.M) {
 
 	res := m.Run()
 
-	os.Remove("test/argument")
-	os.Remove("test/error")
-	os.Remove("test/input")
-	os.Remove("test/response_too_long")
-	os.Remove("test/simple")
-	os.Remove("test/timeout")
+	os.Remove("test/argument/argument")
+	os.Remove("test/error/error")
+	os.Remove("test/input/input")
+	os.Remove("test/response_too_long/response_too_long")
+	os.Remove("test/simple/simple")
+	os.Remove("test/timeout/timeout")
 
 	os.Exit(res)
 }
